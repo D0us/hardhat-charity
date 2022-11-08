@@ -11,6 +11,8 @@ Send out the donations
 */
 
 error Charity__NotOwner();
+error Charity__NoRecipients();
+error Charity__NoDonations();
 
 contract Charity {
     address payable[] private s_recipients;
@@ -22,7 +24,12 @@ contract Charity {
     mapping(address => uint256) private s_donations;
 
     event DonationMade(address donor, uint256 amount);
-    event DonationsSent(address[] recipients, uint256[] amounts, uint256 fee);
+    event DonationsSent(
+        address payable[] recipients,
+        uint256 totalDonated,
+        uint256 donatedPerRecipient,
+        uint256 fee
+    );
     event RecipientAdded(address recipient);
     event RecipientRemoved(address recipient);
     event RevenueAddressChanged(address newRevenueAddress);
@@ -48,17 +55,23 @@ contract Charity {
      * The fee is sent to the revenue address
      */
     function sendDonations() public payable onlyOwner {
-        uint256 totalDonations = address(this).balance;
+        if (s_recipients.length > 0) revert Charity__NoRecipients();
+        if (address(this).balance == 0) revert Charity__NoDonations();
+
+        uint256 balance = address(this).balance;
         address payable[] memory recipients = s_recipients;
-        // todo - 0 value donationFee
-        uint256 fee = (totalDonations * i_donationFee) / 100;
-        uint256 amountPerRecipient = (totalDonations - fee) / recipients.length;
+
+        uint256 fee = (balance * i_donationFee) / 100;
+        uint256 totalDonatable = balance - fee;
+        uint256 amountPerRecipient = totalDonatable / recipients.length;
 
         for (uint256 i = 0; i < recipients.length; i++) {
             recipients[i].transfer(amountPerRecipient);
         }
         // Collect the remainding fees
         payable(s_revenueAddress).transfer(fee);
+
+        emit DonationsSent(recipients, totalDonatable, amountPerRecipient, fee);
     }
 
     /**
@@ -101,6 +114,10 @@ contract Charity {
 
     function getDonators() public view returns (address[] memory) {
         return s_donors;
+    }
+
+    function getRecipients() public view returns (address payable[] memory) {
+        return s_recipients;
     }
 
     function getRevenueAddress() public view returns (address) {
