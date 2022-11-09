@@ -28,4 +28,5 @@ export const networkConfig: networkConfigInfo = {
 
 export const developmentChains = ["hardhat", "localhost"]
 export const VERIFICATION_BLOCK_CONFIRMATIONS = 6
-export const frontEndContractsFile = "../website/src/constants/contractAddresses.json"
+export const frontEndAddressFile = "../website/src/constants/contractAddresses.json"
+export const frontEndAbiFile = "../website/src/constants/abi.json"
