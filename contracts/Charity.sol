@@ -124,6 +124,10 @@ contract Charity {
         return s_revenueAddress;
     }
 
+    function balanceOf() public view returns (uint256) {
+        return address(this).balance;
+    }
+
     modifier onlyOwner() {
         if (msg.sender != i_owner) revert Charity__NotOwner();
         _;
